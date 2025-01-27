@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import signal as sig
 
 y = np.loadtxt('ecg_af.csv', delimiter=',')
 Rpeaks = np.loadtxt('ecg_peaks.csv', delimiter=',')
@@ -30,4 +31,26 @@ avg_qrst = np.mean(qrst, axis=0)
 plt.figure(figsize=(12, 7))
 plt.plot(avg_qrst)
 plt.title('Average QRS complex')
+plt.show()
+
+oscillatory_waves = np.copy(y)
+j = 0
+for sample in Rpeaks:
+  if sample >= 60 and sample < len(y) - 300:
+    start = int(sample - 60)
+    end = int(sample + 300)
+    oscillatory_waves[start:end] = y[start:end] - avg_qrst
+    j += 1
+
+
+psd_resolution = 1000 / len(oscillatory_waves)
+f, Pxx = sig.welch(oscillatory_waves, psd_resolution)
+plt.semilogy(f, Pxx)
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('PSD [V**2/Hz]')
+plt.show()
+
+plt.figure(figsize=(12, 7))
+plt.plot(oscillatory_waves)
+plt.title('Oscillatory Waves')
 plt.show()
